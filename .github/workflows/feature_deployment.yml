@@ -33,7 +33,6 @@ jobs:
         if: always()
         run: |
           echo "Build outputs"
-          cd /home/runner/work/Github-Actions-Sandbox/app/build/outputs/apk/debug/
           tree -a
 
       - name: Export build artifact
