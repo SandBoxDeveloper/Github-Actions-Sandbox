@@ -1,0 +1,90 @@
+name: Deploy Feature
+
+on:
+  push:
+    branches:
+      - main
+      - feature/*
+
+  workflow_dispatch:
+
+jobs:
+
+  build:
+    name: Build Debug Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: Generate Dev APK
+        run: ./gradlew assembleDebug
+
+      - name: List build output
+        if: always()
+        run: |
+          echo "Build outputs"
+          cd /home/runner/work/Github-Actions-Sandbox/Github-Actions-Sandbox/app/build/outputs/apk/debug/
+          tree -a
+
+      - name: Export build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-build
+          path: |
+            ${{ github.workspace }}/app/build/outputs/apk/debug/*.apk
+          retention-days: 3
+
+  deploy:
+    name: Deploy Debug Build
+    needs: [ build ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Get Build Information
+        id: get-build-information
+        run: |
+          echo "Get Build Information"
+          versionName=$(./gradlew printProjectPropertyName -PconfigKey=versionName -q)
+          versionCode=$(./gradlew printProjectPropertyName -PconfigKey=versionCode -q)
+          minSdk=$(./gradlew printProjectPropertyName -PconfigKey=minSdk -q)
+          targetSdk=$(./gradlew printProjectPropertyName -PconfigKey=targetSdk -q)
+          appCenterReleaseUrl="https://appcenter.ms/orgs/GithubTest/apps/GithubActionsApp/distribute/releases"
+
+          {
+            echo "### Build Information"
+            echo "| Name | Value |"
+            echo "| ---- | ----- |"
+          
+            echo "| App Version Name | $versionName |"
+            echo "| App Version Code | $versionCode |"
+            echo "| App Min SDK | $minSdk |"
+            echo "| App Target SDK | $targetSdk |"
+            echo "| App Center Download Link | [Download Url]($appCenterReleaseUrl)"
+            echo ""
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Install AppCenter CLI
+        run: |
+          npm install -g appcenter-cli
+          echo "List downloads folder contents:"
+          ls -R
+        shell: bash
+
+      - name: Upload Debug Build to Appcenter
+        run: |
+          sh /home/runner/work/GithubActionsSandbox/GithubActionsSandbox/.github/scripts/app_center_release_notes.sh releaseNotes
+          cat release_notes_markdown.md
+          appcenter distribute groups publish -f ./dev-build/app-debug.apk --token ${{ secrets.APP_CENTER_TOKEN }} --app Github-Actions-Sandbox -g "Beta Testers" -R release_notes_markdown.md --debug
+        shell: bash
