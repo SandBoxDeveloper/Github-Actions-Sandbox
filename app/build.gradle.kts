@@ -1,5 +1,3 @@
-import org.gradle.api.tasks.Exec
-
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -68,30 +66,4 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-}
-
-val printConfigProperty by tasks.registering(Exec::class) {
-    group = "custom"
-    description = "Prints a property from android.defaultConfig"
-
-    // Get the property name from the project properties
-    val configKey: String? by project.extra
-
-    // Set the command to invoke the Kotlin script
-    commandLine("kotlin", "-e", """
-        val configKey: String? = project.findProperty("configKey") as? String
-        val androidExtension = project.extensions.findByName("android")
-        val defaultConfig = androidExtension?.javaClass?.getMethod("getDefaultConfig")?.invoke(androidExtension)
-
-        if (propertyName != null) {
-            val propertyValue = defaultConfig?.javaClass?.getMethod("getProperty", String::class.java)?.invoke(defaultConfig, propertyName)
-            if (propertyValue != null) {
-                println("$configKey")
-            } else {
-                println("Property '$configKey' not found in defaultConfig")
-            }
-        } else {
-            println("Please specify a property name using '-PpropertyName=<property_name>'")
-        }
-    """.trimIndent())
 }
