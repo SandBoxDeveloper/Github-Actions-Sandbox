@@ -33,6 +33,7 @@ jobs:
         if: always()
         run: |
           echo "Build outputs"
+          cd ${{ github.workspace }}/app/build/outputs/apk/debug/
           tree -a
 
       - name: Export build artifact
@@ -65,7 +66,7 @@ jobs:
           versionCode=$(./gradlew printProjectPropertyName -PconfigKey=versionCode -q)
           minSdk=$(./gradlew printProjectPropertyName -PconfigKey=minSdk -q)
           targetSdk=$(./gradlew printProjectPropertyName -PconfigKey=targetSdk -q)
-          appCenterReleaseUrl="https://appcenter.ms/orgs/GithubTest/apps/GithubActionsApp/distribute/releases"
+          appCenterReleaseUrl="https://appcenter.ms/orgs/GithubTest/apps/GitHubActionsSandbox/distribute/releases"
 
           {
             echo "### Build Information"
@@ -89,7 +90,7 @@ jobs:
 
       - name: Upload Debug Build to Appcenter
         run: |
-          sh /home/runner/work/GithubActionsSandbox/GithubActionsSandbox/.github/scripts/app_center_release_notes.sh releaseNotes
+          sh ${{ github.workspace }}/.github/scripts/app_center_release_notes.sh releaseNotes
           cat release_notes_markdown.md
-          appcenter distribute groups publish -f ./dev-build/app-debug.apk --token ${{ secrets.APP_CENTER_TOKEN }} --app Github-Actions-Sandbox -g "Beta Testers" -R release_notes_markdown.md --debug
+          appcenter distribute groups publish -f ./dev-build/app-debug.apk --token ${{ secrets.APP_CENTER_TOKEN }} --app GithubTest/GitHubActionsSandbox -g "Beta Testers" -R release_notes_markdown.md --debug
         shell: bash
