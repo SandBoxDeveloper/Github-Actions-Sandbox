@@ -68,8 +68,8 @@ jobs:
         id: get-build-information
         run: |
           echo "Get Build Information"
-          versionName=$(./gradlew printProjectPropertyName -PconfigKey=versionName -q)
-          versionCode=$(./gradlew printProjectPropertyName -PconfigKey=versionCode -q)
+          versionName=$(./gradlew printConfigProperty -PconfigKey=versionName -q)
+          versionCode=$(./gradlew printConfigProperty -PconfigKey=versionCode -q)
           minSdk=$(./gradlew printConfigProperty -PconfigKey=minSdk -q)
           targetSdk=$(./gradlew printConfigProperty -PconfigKey=targetSdk -q)
           appCenterReleaseUrl="https://appcenter.ms/orgs/GithubTest/apps/GitHubActionsSandbox/distribute/releases"
